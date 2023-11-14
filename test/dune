@@ -1,0 +1,3 @@
+(test
+ (name hectoc)
+ (libraries ast))
