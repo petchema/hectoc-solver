@@ -1,3 +1,4 @@
 (test
  (name hectoc)
+ (flags (:standard -rectypes))
  (libraries ast))

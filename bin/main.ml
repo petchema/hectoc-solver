@@ -8,8 +8,8 @@ let solve digits =
       match digits with
       | [] -> acc
       | _ ->
-         let everything_as_number = Number (float (List.fold_left (fun acc n -> 10 * acc + n) 0 digits)) in
-         everything_as_number :: (if negative then Neg everything_as_number :: acc else acc) in
+         let everything_as_number = evaluate (Number (float (List.fold_left (fun acc n -> 10 * acc + n) 0 digits))) in
+         everything_as_number :: (if negative then evaluate (Neg everything_as_number) :: acc else acc) in
     
     let solve_using_binary_operator digits negative acc =
       let with_left_and_right left_digits right_digits negative acc =
@@ -21,7 +21,13 @@ let solve digits =
         let solve_right = solve_aux right_digits false in
         List.fold_left (fun acc l ->
             List.fold_left (fun acc r ->
-                Add (l, r) :: Sub (l, r) :: Mul (l, r) :: Div (l, r) :: Exp (l, r) :: Exp (l, Neg r) :: acc
+                evaluate (Add (l, r))
+                :: evaluate (Sub (l, r))
+                :: evaluate (Mul (l, r))
+                :: evaluate (Div (l, r))
+                :: evaluate (Exp (l, r))
+                :: evaluate (Exp (l, evaluate (Neg r)))
+                :: acc
               ) acc solve_right
           ) acc solve_left in
       
@@ -47,7 +53,7 @@ let solve digits =
 let digits = String.fold_right (fun c acc -> Char.code c - Char.code '0' :: acc) Sys.argv.(1) []
 
 let possibilities = solve digits
-let answers = List.filter (fun expr -> evaluate expr = Some 100.) possibilities;;
+let answers = List.filter (fun expr -> expr.value = Some 100.) possibilities;;
 let list_unique = function
   | [] -> []
   | h :: q ->
@@ -61,7 +67,7 @@ let list_unique = function
 let () =
   let unique_solutions =
     answers
-    |> List.map string_of_expr
+    |> List.map string_of_eexpr
     |> List.sort String.compare
     |> list_unique in
   Printf.printf "%d possibilties\n" (List.length possibilities);
