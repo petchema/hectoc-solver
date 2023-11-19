@@ -60,7 +60,13 @@ let eval (expr : 'a expr) (getter: 'a -> evaluated_expr): evaluated_expr =
      { expr = Exp (a_eexpr, b_eexpr);
        value =
          match a_eexpr.value, b_eexpr.value with
-         | Some a_value, Some b_value -> Some (a_value ** b_value)
+         | Some a_value, Some b_value ->
+            let value = a_value ** b_value in
+            (* filter out overflows *)
+            if value = infinity ||
+                 value = neg_infinity ||
+                   value = 0. && a_value != 0. then
+              None else Some value
          | _ -> None }
 
 let evaluate (eexpr: evaluated_expr expr) =
