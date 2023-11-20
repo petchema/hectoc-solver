@@ -75,10 +75,7 @@ let eval (expr : 'a expr) (getter: 'a -> evaluated_expr): evaluated_expr =
                || value = neg_infinity
                || value = 0. && a_value <> 0.
                || value = 1. && a_value <> 1. && b_value <> 0. then None
-            else begin
-                Printf.printf "%f ^ %f = %f\n" a_value b_value value;
-                Some value
-              end
+            else Some value
          | _ -> None }
 
 let evaluate (eexpr: evaluated_expr expr) =
