@@ -1,5 +1,5 @@
 (executable
  (public_name hectoc)
  (name main)
- (flags (:standard -rectypes))
+ (flags (:standard -rectypes -annot))
  (libraries ast))

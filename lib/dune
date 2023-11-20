@@ -1,5 +1,5 @@
 (library
  (name ast)
- (flags (:standard -rectypes))
+ (flags (:standard -rectypes -annot))
  (inline_tests)
  (preprocess (pps ppx_expect)))
