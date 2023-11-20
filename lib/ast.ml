@@ -79,25 +79,28 @@ let priority_of_expr = function
   | Mul _ | Div _ -> 2
   | Exp _ -> 3
 
-type associativity = Left | Right
+type associativity = Left | Right | Both
 
 let associativity_of_expr = function
   | Number _ -> Left (* does it matter? *)
   | Neg _ -> Right
-  | Add _ | Sub _ | Mul _ | Div _ -> Left
+  | Add _ | Mul _ -> Both
+  | Sub _ | Div _ -> Left
   | Exp _ -> Right
         
 let rec string_of_eexpr caller_priority caller_associativity eexpr =
   let priority = priority_of_expr eexpr.expr in
   let associativity = associativity_of_expr eexpr.expr in
+  let left_assoc = associativity = Left || associativity = Both in
+  let right_assoc = associativity = Right || associativity = Both in
   let s = match eexpr.expr with
     | Number n -> if n = floor n then Printf.sprintf "%.0f" n else Printf.sprintf "%f" n
-    | Neg a -> Printf.sprintf "-%s" (string_of_eexpr priority (associativity = Left) a)
-    | Add (a, b) -> Printf.sprintf "%s+%s" (string_of_eexpr priority (associativity = Left) a) (string_of_eexpr priority (associativity = Right) b)
-    | Sub (a, b) -> Printf.sprintf "%s-%s" (string_of_eexpr priority (associativity = Left) a) (string_of_eexpr priority (associativity = Right) b)
-    | Mul (a, b) -> Printf.sprintf "%s*%s" (string_of_eexpr priority (associativity = Left) a) (string_of_eexpr priority (associativity = Right) b)
-    | Div (a, b) -> Printf.sprintf "%s/%s" (string_of_eexpr priority (associativity = Left) a) (string_of_eexpr priority (associativity = Right) b)
-    | Exp (a, b) -> Printf.sprintf "%s^%s" (string_of_eexpr priority (associativity = Left) a) (string_of_eexpr priority (associativity = Right) b) in
+    | Neg a -> Printf.sprintf "-%s" (string_of_eexpr priority left_assoc a)
+    | Add (a, b) -> Printf.sprintf "%s+%s" (string_of_eexpr priority left_assoc a) (string_of_eexpr priority right_assoc b)
+    | Sub (a, b) -> Printf.sprintf "%s-%s" (string_of_eexpr priority left_assoc a) (string_of_eexpr priority right_assoc b)
+    | Mul (a, b) -> Printf.sprintf "%s*%s" (string_of_eexpr priority left_assoc a) (string_of_eexpr priority right_assoc b)
+    | Div (a, b) -> Printf.sprintf "%s/%s" (string_of_eexpr priority left_assoc a) (string_of_eexpr priority right_assoc b)
+    | Exp (a, b) -> Printf.sprintf "%s^%s" (string_of_eexpr priority left_assoc a) (string_of_eexpr priority right_assoc b) in
 (*  let s =
     Printf.sprintf "%s[%s]" s
       (match eexpr.value with
@@ -131,11 +134,10 @@ let%expect_test _ =
      1+2+42
            |}]
 
-(* debatable vs 1+2+42 *)
 let%expect_test _ =
   print_evaluate_ast (Add (Number 1., Add (Number 2., Number 42.)));
   [%expect{|
-     1+(2+42)
+     1+2+42
            |}]
 
 let%expect_test _ =
@@ -150,11 +152,10 @@ let%expect_test _ =
      1*(2+42)
            |}]
 
-(* debatable vs 1+2-42 *)
 let%expect_test _ =
   print_evaluate_ast (Add (Number 1., Sub (Number 2., Number 42.)));
   [%expect{|
-     1+(2-42)
+     1+2-42
            |}]
 
 let%expect_test _ =
