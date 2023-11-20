@@ -71,11 +71,14 @@ let eval (expr : 'a expr) (getter: 'a -> evaluated_expr): evaluated_expr =
          | Some a_value, Some b_value ->
             let value = a_value ** b_value in
             (* filter out some overflows/underflows *)
-            if value = infinity ||
-                 value = neg_infinity ||
-                   value = 0. && a_value != 0. ||
-                     value = 1. && a_value <> 1. && b_value <> 0. then
-              None else Some value
+            if value = infinity
+               || value = neg_infinity
+               || value = 0. && a_value <> 0.
+               || value = 1. && a_value <> 1. && b_value <> 0. then None
+            else begin
+                Printf.printf "%f ^ %f = %f\n" a_value b_value value;
+                Some value
+              end
          | _ -> None }
 
 let evaluate (eexpr: evaluated_expr expr) =
