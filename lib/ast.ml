@@ -28,7 +28,11 @@ let eval (expr : 'a expr) (getter: 'a -> evaluated_expr): evaluated_expr =
      { expr = Add (a_eexpr, b_eexpr);
        value =
          match a_eexpr.value, b_eexpr.value with
-         | Some a_value, Some b_value -> Some (a_value +. b_value)
+         | Some a_value, Some b_value ->
+            (* filter some underflows *)
+            if a_value <> 0. && abs_float (b_value /. a_value) > 1e10
+               || b_value <> 0. && abs_float (a_value /. b_value) > 1e10 then None
+            else Some (a_value +. b_value)
          | _ -> None }
   | Sub (a, b) ->
      let a_eexpr = getter a in
@@ -36,7 +40,11 @@ let eval (expr : 'a expr) (getter: 'a -> evaluated_expr): evaluated_expr =
      { expr = Sub (a_eexpr, b_eexpr);
        value =
          match a_eexpr.value, b_eexpr.value with
-         | Some a_value, Some b_value -> Some (a_value -. b_value)
+         | Some a_value, Some b_value ->
+            (* filter some underflows *)
+            if a_value <> 0. && abs_float (b_value /. a_value) > 1e10
+               || b_value <> 0. && abs_float (a_value /. b_value) > 1e10 then None
+            else Some (a_value -. b_value)
          | _ -> None }
   | Mul (a, b) ->
      let a_eexpr = getter a in
@@ -62,10 +70,11 @@ let eval (expr : 'a expr) (getter: 'a -> evaluated_expr): evaluated_expr =
          match a_eexpr.value, b_eexpr.value with
          | Some a_value, Some b_value ->
             let value = a_value ** b_value in
-            (* filter out overflows *)
+            (* filter out some overflows/underflows *)
             if value = infinity ||
                  value = neg_infinity ||
-                   value = 0. && a_value != 0. then
+                   value = 0. && a_value != 0. ||
+                     value = 1. && a_value <> 1. && b_value <> 0. then
               None else Some value
          | _ -> None }
 
